@@ -1,0 +1,343 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XAIR - Premium Luxury Clothing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      background: #000000; /* Deep black for luxury */
+      color: #FFFFFF; /* Pure white for text */
+      overflow-x: hidden;
+    }
+    h1, h2, h3 {
+      font-family: 'Playfair Display', serif;
+    }
+    /* Logo Styling */
+    .logo {
+      /* Slightly larger for prominence */
+      height: 48px;
+      margin-right: 70px;
+       /* Pure white logo */
+    }
+    /* Subtle Gray Reflective Light */
+    .product-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at top left, #c2a1f7 0%, transparent 30%),
+                  radial-gradient(circle at bottom right, #f297d5 0%, transparent 30%);
+      filter: blur(15px);
+      opacity: 0.15;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .product-card {
+      border: 1px solid #FFFFFF; /* White border for premium look */
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.5s ease;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    .product-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .product-card > * {
+      position: relative;
+      z-index: 1;
+    }
+    /* Product Images */
+    .product-image {
+      width: 100%;
+      object-fit: contain;
+      aspect-ratio: 3 / 4;
+      background: #333333; /* Dark gray for image background */
+    }
+    /* Premium Product Card */
+    .premium-card {
+      position: relative;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    }
+    .premium-card:hover {
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+      transform: scale(1.03);
+    }
+    .premium-badge {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #FFFFFF;
+      color: #000000;
+      padding: 5px 15px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+    .wishlist-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .wishlist-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .wishlist-btn.active {
+      background: rgba(255, 255, 255, 0.8);
+    }
+    .wishlist-btn.active svg {
+      fill: #000000;
+      stroke: #000000;
+    }
+    /* White Hover Effects */
+    .hover\:white-glow:hover {
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    }
+    .hover\:gray-text:hover {
+      color: #D3D3D3;
+    }
+    button.bg-white:hover {
+      background: #D3D3D3;
+      color: #000000;
+    }
+    /* Parallax Effect for Hero */
+    #home {
+      position: relative;
+      background: linear-gradient(to bottom, #0d0d0d, #ffd5f62e);
+      overflow: hidden;
+      opacity: 0.;
+      color:#000000;
+    }
+    #home::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url(bg.png);
+      
+      
+      z-index: 0;
+      transform: translateY(0);
+      transition: transform 0.1s ease-out;
+    }
+    .ca{
+      background-size:cover;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full bg-black/100 backdrop-blur-md z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+      <div class="transition-transform hover:scale-105">
+        <img src="Abhi.jpg" alt="XAIR Logo" class="logo">
+      </div>
+      <!-- Hamburger Menu for Mobile -->
+      <div class="lg:hidden">
+        <button id="menu-toggle" class="text-white focus:outline-none">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+          </svg>
+        </button>
+      </div>
+      <!-- Navigation Links -->
+      <div id="nav-links" class="hidden lg:flex lg:space-x-8 flex-col lg:flex-row absolute lg:static top-16 left-0 w-full lg:w-auto bg-black/80 lg:bg-transparent backdrop-blur-md lg:backdrop-blur-none p-4 lg:p-0">
+        <a href="#home" class="text-white hover:gray-text transition-all duration-300 hover:white-glow py-2 lg:py-0 text-lg">Home</a>
+        <a href="#products" class="text-white hover:gray-text transition-all duration-300 hover:white-glow py-2 lg:py-0 text-lg">Shop</a>
+        <a href="#about" class="text-white hover:gray-text transition-all duration-300 hover:white-glow py-2 lg:py-0 text-lg">About</a>
+        <a href="#contact" class="text-white hover:gray-text transition-all duration-300 hover:white-glow py-2 lg:py-0 text-lg">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section id="home" class="min-h-screen flex items-center justify-center text-center px-4 relative">
+    <div class="space-y-8 z-10">
+      <h1 class="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold transition-transform hover:scale-105 hover:black-glow">XAIR</h1>
+      <p class="text-xl sm:text-2xl md:text-3xl text-gray-400">Timeless Elegance, Unmatched Luxury</p>
+      <a href="#products" class="inline-block bg-white text-black px-8 py-4 rounded-full font-semibold text-lg hover:bg-black hover:text-white hover:black-glow transition-all duration-300">Shop Now</a>
+    </div>
+  </section>
+
+  <!-- Products Section -->
+  <section id="products" class="py-16 sm:py-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 class="text-4xl sm:text-5xl font-bold text-center mb-12 sm:mb-16 transition-transform hover:scale-105 hover:white-glow">Curated Collection</h2>
+      <div class="flex flex-wrap justify-center mb-8 space-x-3 sm:space-x-6">
+        <button onclick="filterProducts('all')" class="px-4 py-2 sm:px-6 sm:py-3 bg-black/80 backdrop-blur-md rounded-full text-white hover:white-glow transition-all duration-300 mb-3 sm:mb-0 text-lg">All</button>
+        <button onclick="filterProducts('men')" class="px-4 py-2 sm:px-6 sm:py-3 bg-black/80 backdrop-blur-md rounded-full text-white hover:white-glow transition-all duration-300 mb-3 sm:mb-0 text-lg">Men</button>
+        <button onclick="filterProducts('women')" class="px-4 py-2 sm:px-6 sm:py-3 bg-black/80 backdrop-blur-md rounded-full text-white hover:white-glow transition-all duration-300 mb-3 sm:mb-0 text-lg">Women</button>
+      </div>
+      <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12">
+        <!-- Product Card 1: Luxury Leather Jacket -->
+        <div class="product-card women relative bg-black/80 backdrop-blur-md rounded-xl overflow-hidden" data-category="women">
+          <img src="i1.png"class="ca" alt="Elegant Evening Dress" class="product-image transition-transform duration-500 hover:scale-110">
+          <div class="p-6 text-center space-y-4">
+            <h3 class="text-xl sm:text-2xl font-semibold">Elegant Evening Dress</h3>
+            <p class="text-white text-lg">₹1199.00</p>
+            <button class="bg-white text-black px-6 py-3 rounded-full font-semibold hover:white-glow transition-all duration-300">Add to Cart</button>
+          </div>
+        </div>
+        <!-- Product Card 2: Elegant Evening Dress -->
+        <div class="product-card women relative bg-black/80 backdrop-blur-md rounded-xl overflow-hidden" data-category="women">
+          <img src="t4.png"class="ca" alt="Elegant Evening Dress" class="product-image transition-transform duration-500 hover:scale-110">
+          <div class="p-6 text-center space-y-4">
+            <h3 class="text-xl sm:text-2xl font-semibold">Elegant Evening Dress</h3>
+            <p class="text-white text-lg">₹1199.00</p>
+            <button class="bg-white text-black px-6 py-3 rounded-full font-semibold hover:white-glow transition-all duration-300">Add to Cart</button>
+          </div>
+        </div>
+        <!-- Product Card 3: Tailored Wool Suit -->
+        <div class="product-card men relative bg-black/80 backdrop-blur-md rounded-xl overflow-hidden" data-category="women">
+          <img src="i1.png" class="ca" alt="Tailored Wool Suit" class="product-image transition-transform duration-500 hover:scale-110">
+          <div class="p-6 text-center space-y-4">
+            <h3 class="text-xl sm:text-2xl font-semibold">Tailored Wool Suit</h3>
+            <p class="text-white text-lg">₹999.00</p>
+            <button class="bg-white text-black px-6 py-3 rounded-full font-semibold hover:white-glow transition-all duration-300">Add to Cart</button>
+          </div>
+        </div>
+        <!-- Premium Product Card: Designer Silk Coat -->
+        
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="py-16 sm:py-24 bg-black/80 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h2 class="text-4xl sm:text-5xl font-bold mb-8 transition-transform hover:scale-105 hover:white-glow">About XAIR</h2>
+      <p class="text-lg sm:text-xl max-w-3xl mx-auto text-gray-400 ">XAIR embodies the pinnacle of luxury and sophistication. Each piece in our curated collection is crafted with the finest materials, designed to elevate your presence with timeless elegance.</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contact" class="bg-black/80 backdrop-blur-md py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+      <div class="transition-transform hover:scale-105">
+        <img src="Abhi.jpg" alt="XAIR Logo" class="logo mx-auto">
+      </div>
+      <p class="text-gray-400 text-base sm:text-lg">Contact us: <a href="mailto:info@xair.com" class="text-white hover:gray-text transition-all duration-300 hover:white-glow">info@xair.com</a></p>
+      <div class="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-6">
+        <a href="#" class="text-white hover:gray-text transition-all duration-300 hover:white-glow text-lg">Instagram</a>
+        <a href="#" class="text-white hover:gray-text transition-all duration-300 hover:white-glow text-lg">Twitter</a>
+        <a href="#" class="text-white hover:gray-text transition-all duration-300 hover:white-glow text-lg">Facebook</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth Scrolling
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+
+    // Product Filter
+    function filterProducts(category) {
+      const products = document.querySelectorAll('.product-card');
+      products.forEach(product => {
+        if (category === 'all' || product.dataset.category === category) {
+          product.style.display = 'block';
+        } else {
+          product.style.display = 'none';
+        }
+      });
+    }
+
+    // Hamburger Menu Toggle
+    const menuToggle = document.getElementById('menu-toggle');
+    const navLinks = document.getElementById('nav-links');
+    menuToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('hidden');
+    });
+
+    // Wishlist Toggle
+    function toggleWishlist(button) {
+      button.classList.toggle('active');
+    }
+
+    // Fade-in Animation for Product Cards
+    const productCards = document.querySelectorAll('.product-card');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.2 });
+    productCards.forEach(card => observer.observe(card));
+
+    // Parallax Effect for Hero Section
+    window.addEventListener('scroll', () => {
+      const heroSection = document.getElementById('home');
+      const scrolled = window.scrollY;
+      heroSection.querySelector('::before').style.transform = `translateY(${scrolled * 0.3}px)`;
+    });
+  </script>
+</body>
+</html>
